@@ -2,7 +2,11 @@
 <html>
 <body>
 <form action="webscrapper.php" method="post" enctype="multipart/form-data" >   
-    <input type="submit" value="Start scan" name="submit">
+    <input type="submit" value="Start scan gsmarena" name="submit1"><br>
+    <input type="submit" value="Start scan phonearena" name="submit2"><br>
+    <input type="submit" value="Start scan devicespecifications" name="submit3"><br>
+    <input type="submit" value="Start scan whistleout" name="submit4">
+
 </form>
 <br><br>
 
@@ -345,19 +349,36 @@ function printXML($myfile, $id, $title, $description, $brand, $slug, $price, $si
 
 
 
-if(isset($_POST["submit"])) {
+if(isset($_POST["submit1"])) {
 
-     $myfile = fopen("/home/pino/Android/newfile.txt", "w") or die("Unable to open file!");
+     $file1 = fopen("/home/andres/file1.txt", "w") or die("Unable to open file!");
 
+    	invokeGsmarena($file1);
 
-//    invokePhonearenaTablets();
-//    invokePhonearena('/tablets');
-//    invokePhonearena('', $myfile);
-//    invokeDevicespecifications($myfile);
-    invokeWhistleout($myfile);
-
-      fclose($myfile);
+      fclose($file1);
 
 }
 
+
+if(isset($_POST["submit2"])) {
+    $file2 = fopen("/home/andres/file2.txt", "w") or die("Unable to open file!");
+	invokePhonearena('', $file2);
+    fclose($file2);
+}
+
+
+if(isset($_POST["submit3"])) {
+    $file3 = fopen("/home/andres/file3.txt", "w") or die("Unable to open file!");
+    invokeDevicespecifications($file3);
+    fclose($file3);
+}
+
+
+if(isset($_POST["submit4"])) {
+    $file4 = fopen("/home/andres/file4.txt", "w") or die("Unable to open file!");
+    invokeWhistleout($file4);
+    fclose($file4);
+}
+
 ?>
+
