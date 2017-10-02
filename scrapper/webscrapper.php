@@ -20,6 +20,8 @@
 set_time_limit(0);
 ini_set('max_execution_time', 30000);
 
+date_default_timezone_set('America/Buenos_Aires');
+
 define("SERVER_gsmarena", "http://www.gsmarena.com");
 define("SERVER_phonearena", "https://www.phonearena.com");
 define("SERVER_devicespecifications", "https://www.devicespecifications.com");
@@ -88,6 +90,9 @@ function invokeGsmarenaData($url)
 
 function invokeGsmarena()
 {
+
+	echo date(DATE_RFC2822);
+    
     $categories = file_get_contents( SERVER_gsmarena . '/makers.php3');
     $categories =  splitInList($categories,'<tr><td><a href=','>');
 
@@ -115,6 +120,9 @@ function invokeGsmarena()
     }
 
     print '<br><br>';
+
+	echo date(DATE_RFC2822);
+
 }
 
 function invokePhonearenaData($url, $myfile)
@@ -155,6 +163,9 @@ function invokePhonearenaData($url, $myfile)
 
 function invokePhonearena($subpath, $myfile)
 {
+
+	print date(DATE_RFC2822);
+
     $categories = file_get_contents( SERVER_phonearena . '/phones/manufacturers');
     $categories =  splitInList($categories,'<div class="s_hover">','" class="s_thumb"');
 
@@ -189,6 +200,8 @@ function invokePhonearena($subpath, $myfile)
     }
 
     print '<br><br>';
+   	print date(DATE_RFC2822);
+
 }
 
 
