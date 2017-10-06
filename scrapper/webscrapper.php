@@ -17,6 +17,14 @@
 
 <?php
 
+include 'configFile.php';
+
+include 'printerXML.php';
+include 'phoneData.php';
+include 'whistleoutData.php';
+
+
+
 set_time_limit(0);
 ini_set('max_execution_time', 30000);
 
@@ -27,6 +35,26 @@ define("SERVER_phonearena", "https://www.phonearena.com");
 define("SERVER_devicespecifications", "https://www.devicespecifications.com");
 define("SERVER_whistleout", "https://www.whistleout.com");
 
+
+function exception_error_handler($errno, $errstr, $errfile, $errline ){
+ #   if (error_reporting() === 0){
+ #       return;
+ #   }
+ #   throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+}
+
+function catchException($e){
+
+#    if (strpos($e, 'file_get_contents') !== false)
+#        print 'Error obteniendo los datos de Youtube. Revise que la clave sea valida.';
+#    else
+#        print '';
+}
+
+
+
+set_exception_handler('catchException');
+set_error_handler("exception_error_handler");
 
 
 function showCellInfo($contenido)
@@ -125,84 +153,7 @@ function invokeGsmarena()
 
 }
 
-function invokePhonearenaData($url, $myfile)
-{
-    $info = file_get_contents( $url );
-    $title =  splitInList($info,'<h1>','</h1>')[1];
-    $title =  splitInList($title,'<span>','</span>')[1];
 
-    $description =  splitInValue($info,'<div class="desc" >','</div>');
-    $brand =  splitInValue($info,'"brand": {','},');
-    $brand =  splitInValue($brand,'"name": "','"');
-
-    $price =  splitInValue($info,'MSRP price:','/li>');
-    $price =  '$' . splitInValue($price,'$','<');
-    
-    $size =  splitInValue($info,'Dimensions:','</ul>');
-    $size =  splitInValue($size,'</span></span>','</li>');
-
-    $amazon =  splitInValue($info,'<a class="price"','Buy</span>');
-    $amazon =  '$' .splitInValue($amazon,'$','<span>');
-
-    $camera =  splitInValue($info,'Camera:','</ul>');
-    $camera =  splitInValue($camera,'</span></span>','</li>');
-
-    $battery =  splitInValue($info,'Capacity:','</ul>');
-    $battery =  splitInValue($battery,'<li>','</li>');
-
-    $speed =  splitInValue($info,'System chip:','</ul>');
-    $speed =  splitInValue($speed,'<li>','</li>');
-
-    printXML($myfile, $url, $title, $description, $brand, '',  $price, $size, $camera, $battery, $speed, '', '', '', '', '', '', '', '', '', $amazon, '', '');
-
-
-    flush();
-    ob_flush();
-}
-
-
-function invokePhonearena($subpath, $myfile)
-{
-
-	print date(DATE_RFC2822);
-
-    $categories = file_get_contents( SERVER_phonearena . '/phones/manufacturers');
-    $categories =  splitInList($categories,'<div class="s_hover">','" class="s_thumb"');
-
-    for($i=1; $i<count($categories); $i++){
-
-        $nextPage = explode('a href="', $categories[$i] . $subpath)[1];
-        print $nextPage . '<br>';
-        flush();
-        ob_flush();
-        while ($nextPage){
-
-            $listCellsPage = file_get_contents( SERVER_phonearena  . $nextPage );
-            $listCells =  splitInList($listCellsPage,'id="phones"','class="s_static"')[1];
-            $listCells =  splitInList($listCells,'<a class="s_thumb" href="','"');
-
-            for($j=1; $j<count($listCells); $j++){
-                print $listCells[$j] . '<br>';
-                flush();
-                ob_flush();
-                invokePhonearenaData( SERVER_phonearena . $listCells[$j], $myfile );
-            }
-        
-            if(isset(splitInList($listCellsPage,'class="s_next"','</li>')[1])){
-               $nextPage = splitInList($listCellsPage,'class="s_next"','</li>')[1];
-               $nextPage = splitInList($nextPage,'href="','"')[1];
-
-            }
-            else {
-                $nextPage = '';
-            }
-        }
-    }
-
-    print '<br><br>';
-   	print date(DATE_RFC2822);
-
-}
 
 
 
@@ -270,24 +221,6 @@ function invokeDevicespecifications($myfile)
 
 // ----------------------------------- https://www.whistleout.com ---------------------------------------
 
-function invokehistleoutData($url, $myfile)
-{
-
-    $url =  splitInList($url,'<a href="','"')[1];
-    $contenido = file_get_contents(SERVER_whistleout . $url );
-
-    $title =  splitInValue(splitInValue($contenido,'<h1 class="font-800 font-8 font-7-xs font-9-lg mar-0">','</h1>'),'<span>','</span>');
-    $description =  splitInValue($contenido,'<p class="mar-0 font-4 font-6-lg font-6-md c-gray-light">','</p>');
-    $brand =  splitInValue($contenido,'<li><a href="/CellPhones/Phones/','">');
-    $size =  splitInValue($contenido,'fa-diagonal font-5 hidden-xs"></span>','<');
-    $camera =  splitInValue($contenido,'fa-picture-o font-5 hidden-xs"></span>','<');
-    $battery =  splitInValue($contenido,'fa-battery-half font-5 hidden-xs"></span>','<');
-
-    printXML($myfile, SERVER_whistleout . $url, $title, $description, $brand, '', '', $size, $camera, $battery, '', '', '', '', '', '', '', '', '', '', '', '', '');
-
-    flush();
-    ob_flush();
-}
 
 function invokeWhistleout($myfile)
 {
@@ -337,36 +270,15 @@ function invokeWhistleout($myfile)
 
 
 
-function printXML($myfile, $id, $title, $description, $brand, $slug, $price, $size, $camera, $battery, $speed, $created_at, $created_by, $created_type, $updated_at, $updated_by, $updated_type, $published_at, $published_by, $state, $amazon, $ebay, $bestbuy)
-{
 
-    $description = str_replace("&#39;", "'", trim($description));
-    $description = str_replace("&quot;", "\"", $description);
 
-    fwrite($myfile, "        <cellphone>\n");
-    fwrite($myfile, "            <id>"          . trim($id)           . "</id>\n");
-    fwrite($myfile, "            <title>"       . trim($title)        . "</title>\n");
-    fwrite($myfile, "            <description>" . trim($description)  . "</description>\n");
-    fwrite($myfile, "            <brand>"       . trim($brand)        . "</brand>\n");
-    fwrite($myfile, "            <slug>"        . trim($slug)         . "</slug>\n");
-    fwrite($myfile, "            <price>"       . trim($price)        . "</price>\n");
-    fwrite($myfile, "            <size>"        . trim($size)         . "</size>\n");
-    fwrite($myfile, "            <camera>"      . trim($camera)       . "</camera>\n");
-    fwrite($myfile, "            <battery>"     . trim($battery)      . "</battery>\n");
-    fwrite($myfile, "            <speed>"       . trim($speed)        . "</speed>\n");
-    fwrite($myfile, "            <amazon>"      . trim($amazon)        . "</amazon>\n");
 
-    fwrite($myfile, "        </cellphone>\n");
-
-    flush();
-    ob_flush();
-}
 
 
 
 if(isset($_POST["submit1"])) {
 
-     $file1 = fopen("/home/andres/file1.txt", "w") or die("Unable to open file!");
+     $file1 = fopen( GSMARENA_FILE_PATH , "w") or die("Unable to open file!");
 
     	invokeGsmarena($file1);
 
@@ -376,21 +288,21 @@ if(isset($_POST["submit1"])) {
 
 
 if(isset($_POST["submit2"])) {
-    $file2 = fopen("/home/andres/file2.txt", "w") or die("Unable to open file!");
+    $file2 = fopen( PHONERARENA_FILE_PATH , "w") or die("Unable to open file!");
 	invokePhonearena('', $file2);
     fclose($file2);
 }
 
 
 if(isset($_POST["submit3"])) {
-    $file3 = fopen("/home/andres/file3.txt", "w") or die("Unable to open file!");
+    $file3 = fopen( DEVICESPECIFICATIONS_FILE_PATH , "w") or die("Unable to open file!");
     invokeDevicespecifications($file3);
     fclose($file3);
 }
 
 
 if(isset($_POST["submit4"])) {
-    $file4 = fopen("/home/andres/file4.txt", "w") or die("Unable to open file!");
+    $file4 = fopen( WHISLEOUT_FILE_PATH , "w") or die("Unable to open file!");
     invokeWhistleout($file4);
     fclose($file4);
 }
